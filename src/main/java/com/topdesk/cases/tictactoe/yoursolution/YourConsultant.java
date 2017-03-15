@@ -4,13 +4,11 @@ import com.topdesk.cases.tictactoe.CellState;
 import com.topdesk.cases.tictactoe.Consultant;
 import com.topdesk.cases.tictactoe.GameBoard;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class YourConsultant implements Consultant {
-
-
-
 
 	@Override
 	public CellLocation suggest(GameBoard gameBoard) throws NullPointerException, IllegalStateException {
@@ -21,20 +19,22 @@ public class YourConsultant implements Consultant {
 //			for iterating through the table
 		CellState[][] boardOfStates = getBoardOfStates(gameBoard);
 //			for counting empty cells and checking for game over
-		List<CellState> allCellStates = new ArrayList<CellState>();
+		List<CellState> listOfStates = getListOfStates(gameBoard);
+
+				new ArrayList<CellState>();
 	//		check who's turn is it
-		CellState currentPlayer = findCurrentPlayer(allCellStates);
+		CellState currentPlayer = findCurrentPlayer(listOfStates);
 	//		check if the game is over 1
-		if (isGameOverNoEmptyCell(allCellStates)) throw new IllegalStateException("no available moves (board is full)");
+		if (isGameOverNoEmptyCell(listOfStates)) throw new IllegalStateException("no available moves (board is full)");
 	//		check if the game is over 2
-		if (isGameOverAlreadyWon(allCellStates)) throw new IllegalStateException("game is already over" + currentPlayer.toString() + " won");
+		if (isGameOverAlreadyWon(listOfStates)) throw new IllegalStateException("game is already over" + currentPlayer.toString() + " won");
 
 		int index = nextMove(currentPlayer,boardOfStates);
 
 		CellLocation[] allCellLocations = CellLocation.values();
 
 		return allCellLocations[index];
-//	return null;
+
 	}
 
 	private CellState findCurrentPlayer(List allCellStates){
@@ -56,6 +56,16 @@ public class YourConsultant implements Consultant {
 			}
 		}
 		return false;
+	}
+
+	private List<CellState> getListOfStates(GameBoard gameBoard){
+		List<CellState> allCellStates = new ArrayList<CellState>();
+		CellLocation[] allCellLocations = CellLocation.values();
+		for (CellLocation cellLocation : allCellLocations
+				) {
+			allCellStates.add(gameBoard.getCellState(cellLocation));
+		}
+		return allCellStates;
 	}
 
 	private CellState[][] getBoardOfStates(GameBoard gameBoard){
@@ -109,7 +119,7 @@ public class YourConsultant implements Consultant {
 
 				for (int k = 0 ; k < 4 ; k++) {
 					int ctr = 0;
-					while(boardOfStates[row+DI[k]*ctr][column+DJ[k]*ctr] == player) ctr++;
+					while(getBoardValue((row+DI[k]*ctr),(column+DJ[k]*ctr), boardOfStates) == player) ctr++;
 					if(ctr == 3) return true;
 				}
 			}
@@ -130,7 +140,7 @@ public class YourConsultant implements Consultant {
 					boolean ok = nextWinningMove(
 							currentPlayer == CellState.OCCUPIED_BY_X ? CellState.OCCUPIED_BY_O : CellState.OCCUPIED_BY_X, boardOfStates) == -1;
 					boardOfStates[row][column] = CellState.EMPTY;
-					if (ok) return 3 * row + column;
+					if (ok) return (3 * row + column);
 				}
 			}
 		}
@@ -149,30 +159,4 @@ public class YourConsultant implements Consultant {
 		return -1;
 	}
 }
-
-
-// ki jon?
-//
-// hova lepjen?
-//CellLocation-t kell visszaadnia
-//consultant.suggest(board)
-//CellState getCellState(CellLocation cellLocation);
-//gameBoard.getCellState(CellLocation);
-//int numberOfx = 0;
-//	int numberOfo = 0;
-//	int numberOfempty =0;
-
-
-//	if (boardOfStates[row][column] == CellState.EMPTY){
-//			boardOfStates[row][column] = currentPlayer;
-
-
-//	public CellState getBoardValue(int row,int column) {
-//		if(row < 0 || row >= 3) return null;
-//		if(column < 0 || column >= 3) return null;
-//		return boardOf[i][j];
-//	}
-
-
-
 
