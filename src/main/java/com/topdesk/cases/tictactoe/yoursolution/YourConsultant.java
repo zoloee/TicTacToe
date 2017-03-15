@@ -48,7 +48,7 @@ public class YourConsultant implements Consultant {
 	}
 	private boolean isGameOverAlreadyWon(List allCellStates) {
 		if (Collections.frequency(allCellStates, CellState.EMPTY) < 4) {
-			// 		needs a few more checks to be a full solution: for top/bottom and north/south centre cell's neighbours
+			// 		needs a few more checks to be a full solution: for left/right/top/bottom centre cell's neighbours
 			for (int k = 1; k < 5; k++) {
 				if (allCellStates.get(4) == allCellStates.get(4 + k) && allCellStates.get(4) == allCellStates.get(4 - k)) {
 					return true;
@@ -70,13 +70,11 @@ public class YourConsultant implements Consultant {
 
 	private CellState[][] getBoardOfStates(GameBoard gameBoard){
 		CellLocation[] allCellLocations = CellLocation.values();
-//		List<CellState> allCellStates = new ArrayList<CellState>();
 		CellState[][] boardOfStates = new CellState[3][3];
 		int row = 0;
 		int column = 0;
 		for (CellLocation cellLocation : allCellLocations
 				) {
-//			allCellStates.add(gameBoard.getCellState(cellLocation));
 			boardOfStates[row][column] = gameBoard.getCellState(cellLocation);
 			if (column == 2) {
 				column = 0;
@@ -89,8 +87,8 @@ public class YourConsultant implements Consultant {
 	}
 
 	private CellState getBoardValue(int row, int column, CellState[][] boardOfStates){
-		if (row < 0 || row >= 3 ) return CellState.EMPTY;
-		if (column < 0 || column >= 3 ) return CellState.EMPTY;
+		if (row < 0 || row >= 3 ) return null;
+		if (column < 0 || column >= 3 ) return null;
 		return boardOfStates[row][column];
 	}
 
@@ -128,25 +126,52 @@ public class YourConsultant implements Consultant {
 
 	private int nextMove(CellState currentPlayer, CellState[][] boardOfStates) {
 
-        /* if we can move on the next turn */
+        /* if we can win */
 		int winMove = nextWinningMove(currentPlayer, boardOfStates);
 		if (winMove != -1) return winMove;
 
-        /* choose the move that prevent enemy to win */
+
+		/* choose the move that prevent enemy to win */
+		int otherWouldWinBy;
 		for (int row = 0; row < 3; row++) {
 			for (int column = 0; column < 3; column++) {
 				if (getBoardValue(row, column, boardOfStates) == CellState.EMPTY) {
 					boardOfStates[row][column] = currentPlayer;
-					boolean ok = nextWinningMove(
-							currentPlayer == CellState.OCCUPIED_BY_X ? CellState.OCCUPIED_BY_O : CellState.OCCUPIED_BY_X, boardOfStates) == -1;
+					otherWouldWinBy = nextWinningMove(currentPlayer == CellState.OCCUPIED_BY_X ? CellState.OCCUPIED_BY_O : CellState.OCCUPIED_BY_X, boardOfStates);
 					boardOfStates[row][column] = CellState.EMPTY;
-					if (ok) return (3 * row + column);
+					if (otherWouldWinBy != -1) return otherWouldWinBy;
 				}
 			}
 		}
 
-        /* lucky position in the center of board*/
-		if (boardOfStates[1][1] == CellState.EMPTY) return 4;
+		/* if we can fork */
+		int forkMove = nextForkingMove(currentPlayer,boardOfStates);
+		if (forkMove != -1) return forkMove;
+
+
+		/* choose the move that prevent enemy to fork */
+		int otherWouldForkBy;
+		for (int row = 0; row < 3; row++) {
+			for (int column = 0; column < 3; column++) {
+				if (getBoardValue(row, column, boardOfStates) == CellState.EMPTY) {
+					boardOfStates[row][column] = currentPlayer;
+					otherWouldForkBy = nextForkingMove(currentPlayer == CellState.OCCUPIED_BY_X ? CellState.OCCUPIED_BY_O : CellState.OCCUPIED_BY_X, boardOfStates);
+					boardOfStates[row][column] = CellState.EMPTY;
+					if (otherWouldForkBy != -1) return otherWouldForkBy;
+				}
+			}
+		}
+
+
+		  /* lucky position in the center of board if enemy does not win with this in the next move*/
+		if (boardOfStates[1][1] == CellState.EMPTY){
+			boardOfStates[1][1] = currentPlayer;
+			boolean ok = nextWinningMove(
+					currentPlayer == CellState.OCCUPIED_BY_X ? CellState.OCCUPIED_BY_O : CellState.OCCUPIED_BY_X, boardOfStates) == -1;
+			boardOfStates[1][1] = CellState.EMPTY;
+			if (ok) return 4;
+		}
+
 
         /* choose available move */
 		for (int row = 0; row < 3; row++) {
@@ -155,8 +180,38 @@ public class YourConsultant implements Consultant {
 					return 3 * row + column;
 			}
 		}
+
         /* no move is available */
 		return -1;
+	}
+
+	private int nextForkingMove(CellState player, CellState[][] boardOfStates){
+		for (int row = 0; row < 3; row++) {
+		for (int column = 0; column < 3; column++) {
+			if (getBoardValue(row, column, boardOfStates) == CellState.EMPTY) {
+				boolean ok = checkSurroundingForTwoNeighbourAndOneEmptyCell(row, column,boardOfStates,player);
+				if (ok) return (3 * row + column);
+				}
+			}
+		}
+		return -1;
+	}
+
+
+	private boolean checkSurroundingForTwoNeighbourAndOneEmptyCell(
+			int row, int column, CellState[][] boardOfStates, CellState currentPlayer){
+		final int DI[] = {0,-1,-1,-1,0,1,1,1};
+		final int DJ[] = {-1,-1,0,1,1,1,0,-1};
+		int ctr = 0;
+		for (int k = 0 ; k < 8 ; k++) {
+			if (getBoardValue((row+DI[k]),(column+DJ[k]), boardOfStates) == currentPlayer) {
+				if (getBoardValue((row + (DI[k] * 2)), (column + (DJ[k] * 2)), boardOfStates) == CellState.EMPTY) {
+					ctr++;
+				}
+			}
+			if(ctr == 2) return true;
+		}
+		return false;
 	}
 }
 
