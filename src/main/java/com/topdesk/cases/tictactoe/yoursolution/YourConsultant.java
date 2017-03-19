@@ -17,9 +17,9 @@ public final class YourConsultant implements Consultant{
 		List<CellState> listOfStates = getListOfStates(gameBoard);
 		CellState tokenForCurrentPlayer = getTokenForCurrentPlayer(listOfStates);
 		if (isGameOverNoEmptyCell(listOfStates)) throw new IllegalStateException("no available moves (board is full)");
-		if (isGameOverAlreadyWon(listOfStates)) throw new IllegalStateException("game is already over" + tokenForCurrentPlayer.toString() + " won");
+		if (isGameOverAlreadyWon(listOfStates)) throw new IllegalStateException("game is already over");
 
-		int index = nextMove(tokenForCurrentPlayer,boardOfStates);
+		int index = nextMove(tokenForCurrentPlayer, boardOfStates);
 
 		CellLocation[] allCellLocations = CellLocation.values();
 
